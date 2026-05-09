@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Admin - Repasse de Rotas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{box-sizing:border-box}
+
+:root{
+  --bg:#050816;
+  --bg2:#02040d;
+  --panel:#0f172a;
+  --panel2:#111827;
+  --card:#020617;
+  --line:rgba(148,163,184,.24);
+  --line2:rgba(255,255,255,.10);
+  --text:#ffffff;
+  --muted:#cbd5e1;
+  --soft:#94a3b8;
+  --orange:#ee4d2d;
+  --orange2:#ff7a45;
+  --orangeSoft:rgba(238,77,45,.14);
+  --blue:#2563eb;
+  --green:#16a34a;
+  --red:#dc2626;
+  --yellow:#ca8a04;
+  --shadow:0 22px 55px rgba(0,0,0,.36);
+  --radius:24px;
+}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:
+    radial-gradient(circle at top left,rgba(238,77,45,.22),transparent 32%),
+    radial-gradient(circle at top right,rgba(255,122,69,.10),transparent 28%),
+    linear-gradient(180deg,#080b16 0%,#050816 46%,#02040d 100%);
+  color:var(--text);
+  min-height:100vh;
+}
+
+.locked .app{display:none}
+
+.header{
+  padding:30px 28px;
+  background:
+    linear-gradient(135deg,rgba(238,77,45,.96),rgba(255,122,69,.72) 34%,rgba(17,24,39,.95));
+  border-bottom:1px solid var(--line2);
+  box-shadow:0 20px 50px rgba(238,77,45,.12);
+}
+
+.header h1{
+  margin:0;
+  font-size:clamp(28px,4vw,48px);
+  font-weight:900;
+  letter-spacing:.2px;
+}
+
+.header p{
+  color:#ffe5dc;
+  margin:8px 0 0;
+  font-size:16px;
+}
+
+.container{
+  width:min(1480px,100%);
+  margin:0 auto;
+  padding:24px;
+  display:grid;
+  gap:22px;
+}
+
+.card{
+  background:
+    linear-gradient(145deg,rgba(17,24,39,.97),rgba(8,13,28,.98)),
+    radial-gradient(circle at top right,rgba(238,77,45,.10),transparent 35%);
+  border:1px solid var(--line2);
+  border-radius:var(--radius);
+  padding:24px;
+  box-shadow:var(--shadow);
+}
+
+.card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  flex-wrap:wrap;
+  margin-bottom:18px;
+}
+
+.card h2{
+  margin:0 0 8px;
+  color:#ffb199;
+  font-size:28px;
+}
+
+.card p{
+  margin:0;
+  color:var(--muted);
+}
+
+.actions,.row{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+button{
+  border:0;
+  border-radius:14px;
+  padding:13px 16px;
+  background:linear-gradient(90deg,var(--orange),var(--orange2));
+  color:white;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 10px 24px rgba(238,77,45,.20);
+  transition:transform .12s ease,filter .12s ease,box-shadow .12s ease;
+}
+
+button:hover{
+  filter:brightness(1.06);
+  transform:translateY(-1px);
+}
+
+button:active{
+  transform:translateY(0);
+  filter:brightness(.98);
+}
+
+.btn-dark{background:#334155;box-shadow:none}
+.btn-info{background:linear-gradient(90deg,#1d4ed8,#2563eb);box-shadow:0 10px 24px rgba(37,99,235,.16)}
+.btn-ok{background:linear-gradient(90deg,#16a34a,#22c55e);box-shadow:0 10px 24px rgba(34,197,94,.16)}
+.btn-danger{background:linear-gradient(90deg,#991b1b,#dc2626);box-shadow:0 10px 24px rgba(220,38,38,.16)}
+.btn-warn{background:linear-gradient(90deg,#b45309,#f59e0b);box-shadow:0 10px 24px rgba(245,158,11,.16)}
+
+input,select{
+  width:100%;
+  padding:14px;
+  margin:8px 0;
+  border-radius:14px;
+  border:1px solid #334155;
+  background:#020617;
+  color:white;
+  font-size:16px;
+  outline:none;
+}
+
+input:focus,select:focus{
+  border-color:var(--orange);
+  box-shadow:0 0 0 3px rgba(238,77,45,.18);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:14px;
+}
+
+.toolbar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin:14px 0 18px;
+}
+
+.search-input{
+  max-width:430px;
+  min-width:260px;
+}
+
+.route-list,.waiting-list{
+  display:grid;
+  gap:14px;
+}
+
+.item{
+  display:grid;
+  grid-template-columns:auto minmax(260px,1fr) 170px minmax(270px,.95fr) auto;
+  gap:18px;
+  align-items:center;
+  background:
+    linear-gradient(145deg,rgba(2,6,23,.96),rgba(15,23,42,.98));
+  border:1px solid var(--line);
+  border-left:5px solid var(--orange);
+  border-radius:22px;
+  padding:18px;
+  box-shadow:0 12px 30px rgba(0,0,0,.24);
+}
+
+.item:hover{
+  border-color:rgba(238,77,45,.48);
+}
+
+.item-check{
+  width:22px;
+  height:22px;
+  margin:0;
+  accent-color:var(--orange);
+}
+
+.route-main h3,.waiting-main h3{
+  margin:0 0 8px;
+  font-size:24px;
+  color:white;
+}
+
+.route-main p,.route-details p,.waiting-main p{
+  margin:6px 0;
+  color:var(--muted);
+}
+
+.route-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.badge{
+  display:inline-block;
+  padding:7px 11px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:12px;
+}
+
+.ok{background:#064e3b;color:#86efac}
+.done{background:#713f12;color:#fde68a}
+.off{background:#450a0a;color:#fca5a5}
+
+.vehicle-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:8px;
+}
+
+.vehicle-tag{
+  display:inline-block;
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(250,204,21,.08);
+  border:1px solid rgba(250,204,21,.75);
+  color:#facc15;
+  font-weight:900;
+  font-size:12px;
+}
+
+.route-details{
+  background:rgba(2,6,23,.58);
+  border:1px solid rgba(148,163,184,.16);
+  border-radius:16px;
+  padding:14px;
+}
+
+.route-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.route-actions button{
+  min-width:136px;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.78);
+  z-index:50;
+  backdrop-filter:blur(5px);
+}
+
+.modal.show{display:flex}
+
+.box{
+  position:relative;
+  width:100%;
+  max-width:680px;
+  max-height:92vh;
+  overflow:auto;
+  background:linear-gradient(145deg,#111827,#070b17);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:28px;
+  padding:28px;
+  box-shadow:0 30px 80px rgba(0,0,0,.65);
+}
+
+.box.large{max-width:1120px}
+
+.close{
+  position:absolute;
+  right:14px;
+  top:14px;
+  background:#1f2937;
+  width:42px;
+  height:42px;
+  padding:0;
+}
+
+.notice{
+  padding:14px;
+  border:1px solid #263044;
+  background:#020617;
+  border-radius:16px;
+  color:var(--muted);
+}
+
+.toast{
+  position:fixed;
+  right:22px;
+  bottom:22px;
+  background:#111827;
+  border-left:5px solid var(--orange);
+  border-radius:16px;
+  padding:14px 18px;
+  box-shadow:0 18px 45px rgba(0,0,0,.42);
+  opacity:0;
+  transform:translateY(12px);
+  transition:.18s;
+  z-index:99;
+  max-width:420px;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translateY(0);
+}
+
+.vehicle-options{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+  gap:10px;
+  margin:12px 0;
+}
+
+.vehicle-check{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding:13px;
+  border:1px solid #334155;
+  border-radius:16px;
+  background:#020617;
+  font-weight:900;
+}
+
+.vehicle-check input{
+  width:auto;
+  margin:0;
+  accent-color:var(--orange);
+}
+
+.vehicle-check:has(input:checked){
+  border-color:var(--orange);
+  background:rgba(238,77,45,.15);
+}
+
+.result{
+  margin-top:12px;
+  white-space:pre-line;
+}
+
+.muted{color:var(--muted)}
+
+
+.status-center{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:52px;
+}
+
+
+.badge.ok{
+  background:linear-gradient(90deg,#166534,#22c55e,#16a34a);
+  color:#f0fdf4;
+  border:1px solid rgba(74,222,128,.85);
+  box-shadow:
+    0 0 12px rgba(34,197,94,.55),
+    0 0 24px rgba(22,163,74,.30),
+    inset 0 0 10px rgba(255,255,255,.10);
+  animation:disponivelGlow 1.35s ease-in-out infinite alternate;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+}
+
+@keyframes disponivelGlow{
+  from{
+    filter:brightness(1);
+    box-shadow:
+      0 0 10px rgba(34,197,94,.42),
+      0 0 18px rgba(22,163,74,.22),
+      inset 0 0 8px rgba(255,255,255,.08);
+  }
+  to{
+    filter:brightness(1.18);
+    box-shadow:
+      0 0 18px rgba(34,197,94,.88),
+      0 0 34px rgba(22,163,74,.48),
+      inset 0 0 12px rgba(255,255,255,.16);
+  }
+}
+
+.badge-repassada{
+  background:linear-gradient(90deg,#92400e,#f59e0b,#f97316);
+  color:#fff7ed;
+  border:1px solid rgba(251,191,36,.85);
+  box-shadow:
+    0 0 12px rgba(245,158,11,.65),
+    0 0 24px rgba(249,115,22,.35),
+    inset 0 0 10px rgba(255,255,255,.10);
+  animation:rotaRepassadaGlow 1.35s ease-in-out infinite alternate;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+}
+
+@keyframes rotaRepassadaGlow{
+  from{
+    filter:brightness(1);
+    box-shadow:
+      0 0 10px rgba(245,158,11,.48),
+      0 0 18px rgba(249,115,22,.22),
+      inset 0 0 8px rgba(255,255,255,.08);
+  }
+  to{
+    filter:brightness(1.22);
+    box-shadow:
+      0 0 18px rgba(245,158,11,.92),
+      0 0 34px rgba(249,115,22,.52),
+      inset 0 0 12px rgba(255,255,255,.16);
+  }
+}
+
+@media(max-width:980px){
+  .item{
+    grid-template-columns:1fr;
+  }
+
+  .item-check{
+    justify-self:start;
+  }
+
+  .route-actions{
+    justify-content:stretch;
+  }
+
+  .route-actions button,.actions button{
+    width:100%;
+  }
+
+  .search-input{
+    max-width:none;
+    min-width:100%;
+  }
+}
+
+.shift-options{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(100px,1fr));
+  gap:10px;
+  margin:12px 0;
+}
+
+.shift-switch{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:13px;
+  border:1px solid #334155;
+  border-radius:16px;
+  background:#020617;
+  font-weight:900;
+}
+
+.shift-switch input{
+  width:44px;
+  height:24px;
+  margin:0;
+  appearance:none;
+  border-radius:999px;
+  background:#334155;
+  position:relative;
+  cursor:pointer;
+  transition:.18s;
+}
+
+.shift-switch input:before{
+  content:"";
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:white;
+  position:absolute;
+  top:2px;
+  left:3px;
+  transition:.18s;
+}
+
+.shift-switch input:checked{
+  background:linear-gradient(90deg,#ee4d2d,#ff7a45);
+}
+
+.shift-switch input:checked:before{
+  transform:translateX(19px);
+}
+
+.shift-tag{
+  display:inline-block;
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(56,189,248,.08);
+  border:1px solid rgba(56,189,248,.75);
+  color:#7dd3fc;
+  font-weight:900;
+  font-size:12px;
+  margin:4px 5px 4px 0;
+}
+
+
+.global-shift-filter{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(260px,1fr) repeat(3,minmax(120px,150px));
+  gap:10px;
+  align-items:center;
+  padding:14px;
+  margin-top:6px;
+  border:1px solid rgba(238,77,45,.24);
+  border-radius:18px;
+  background:linear-gradient(145deg,rgba(2,6,23,.72),rgba(15,23,42,.82));
+}
+
+.global-shift-filter strong{
+  display:block;
+  color:#fff;
+  font-size:15px;
+}
+
+.global-shift-filter small{
+  display:block;
+  color:#cbd5e1;
+  margin-top:4px;
+}
+
+@media(max-width:980px){
+  .global-shift-filter{
+    grid-template-columns:1fr;
+  }
+}
+
+
+.admin-message-box{
+  text-align:center;
+}
+
+.admin-message-icon{
+  width:68px;
+  height:68px;
+  border-radius:22px;
+  display:grid;
+  place-items:center;
+  margin:0 auto 16px;
+  font-size:34px;
+  font-weight:900;
+  background:rgba(238,77,45,.16);
+  border:1px solid rgba(238,77,45,.38);
+  color:#ffb199;
+}
+
+.admin-message-box h2{
+  margin:0 0 10px;
+  font-size:28px;
+  color:#fff;
+}
+
+.admin-message-box p{
+  color:#cbd5e1;
+  line-height:1.5;
+}
+
+.admin-message-actions{
+  display:grid;
+  gap:10px;
+  margin-top:18px;
+}
+
+.admin-confirm-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:18px;
+}
+
+@media(max-width:560px){
+  .admin-confirm-actions{
+    grid-template-columns:1fr;
+  }
+}
+
+
+.waiting-modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-bottom:16px;
+}
+
+.waiting-modal-head h2{
+  margin:0 0 6px;
+  color:#ffb199;
+}
+
+.waiting-modal-head p{
+  margin:0;
+  color:#cbd5e1;
+}
+
+.waiting-modal-tools{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:16px;
+}
+
+.waiting-time-badge{
+  display:inline-block;
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(56,189,248,.10);
+  border:1px solid rgba(56,189,248,.70);
+  color:#7dd3fc;
+  font-weight:900;
+  font-size:12px;
+}
+
+
+#modalMsg,
+#modalConfirmacao{
+  z-index: 9999 !important;
+}
+
+#modalMsg .box,
+#modalConfirmacao .box{
+  z-index: 10000 !important;
+}
+
+</style>
+</head>
+
+<body class="locked">
+
+<div id="toast" class="toast"></div>
+
+<div id="modalMsg" class="modal">
+  <div class="box admin-message-box">
+    <button class="close" onclick="fechar('modalMsg')">×</button>
+    <div class="admin-message-icon" id="msgIcon">!</div>
+    <h2 id="msgTitulo">Aviso</h2>
+    <p id="msgTexto">Mensagem</p>
+    <div class="admin-message-actions">
+      <button onclick="fechar('modalMsg')">Entendi</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalConfirmacao" class="modal">
+  <div class="box admin-message-box">
+    <button class="close" onclick="fechar('modalConfirmacao')">×</button>
+    <div class="admin-message-icon" id="confirmIcon">!</div>
+    <h2 id="confirmTitulo">Confirmar ação</h2>
+    <p id="confirmTexto">Tem certeza?</p>
+    <div class="admin-confirm-actions">
+      <button class="btn-dark" onclick="cancelarConfirmacao()">Cancelar</button>
+      <button class="btn-danger" id="confirmBtn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="app">
+  <div class="header">
+    <h1>Painel Admin - Repasse de Rotas</h1>
+    <p>Gerencie motoristas, rotas e presença no galpão.</p>
+  </div>
+
+  <div class="container">
+    <div class="actions">
+      <button onclick="abrir('modalRota')">+ Divulgar rota</button>
+      <button class="btn-info" onclick="abrir('modalRotasMassa')">+ Divulgar em massa</button>
+      <button onclick="abrir('modalMotorista')">+ Novo motorista</button>
+      <button class="btn-info" onclick="abrir('modalConsulta')">Consultar motorista</button>
+      <button class="btn-ok" onclick="abrirGalpao()">Configurar galpão</button>
+      <button class="btn-info" onclick="abrirMotoristasGalpao()">Motoristas no galpão</button>
+      <button class="btn-dark" onclick="sair()">Sair</button>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Rotas publicadas</h2>
+          <p>Veja as rotas disponíveis, repassadas e quem pegou cada uma.</p>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input id="busca" class="search-input" placeholder="Buscar rota, região, motorista ou ID" oninput="renderRotas()">
+        <button class="btn-dark" onclick="carregarRotas()">Atualizar</button>
+        <button class="btn-info" onclick="selecionarRotasVisiveis()">Selecionar visíveis</button>
+        <button class="btn-dark" onclick="desmarcarRotas()">Desmarcar</button>
+        <button class="btn-danger" onclick="limparRotasSelecionadas()">Excluir selecionadas</button>
+        <button class="btn-danger" onclick="limparTodasRotas()">Excluir todas</button>
+        <div class="global-shift-filter">
+          <div>
+            <strong>Turnos liberados nas rotas publicadas</strong>
+            <small>Altere aqui quais turnos podem pegar as rotas disponíveis.</small>
+          </div>
+          <label class="shift-switch">AM <input type="checkbox" class="globalTurno" value="AM" checked onchange="salvarTurnosGlobais()"></label>
+          <label class="shift-switch">SD <input type="checkbox" class="globalTurno" value="SD" checked onchange="salvarTurnosGlobais()"></label>
+          <label class="shift-switch">PM2 <input type="checkbox" class="globalTurno" value="PM2" checked onchange="salvarTurnosGlobais()"></label>
+        </div>
+      </div>
+
+      <div id="listaRotas" class="route-list"></div>
+    </div>
+
+  </div>
+</div>
+
+
+<div id="modalMotoristasGalpao" class="modal">
+  <div class="box large">
+    <button class="close" onclick="fechar('modalMotoristasGalpao')">×</button>
+
+    <div class="waiting-modal-head">
+      <div>
+        <h2>Motoristas no galpão</h2>
+        <p>Acompanhe quem confirmou presença. A ordem fica pelo horário de preenchimento, considerando segundos.</p>
+      </div>
+    </div>
+
+    <div class="waiting-modal-tools">
+      <button class="btn-dark" onclick="carregarWaiting()">Atualizar lista</button>
+      <button class="btn-info" onclick="selecionarWaitingVisiveis()">Selecionar visíveis</button>
+      <button class="btn-dark" onclick="desmarcarWaiting()">Desmarcar</button>
+      <button class="btn-danger" onclick="limparWaitingSelecionados()">Excluir selecionados</button>
+      <button class="btn-danger" onclick="limparWaitingHoje()">Limpar todos de hoje</button>
+    </div>
+
+    <div id="listaWaiting" class="waiting-list"></div>
+  </div>
+</div>
+
+<div id="modalLogin" class="modal show">
+  <div class="box">
+    <h2>Acesso administrativo</h2>
+    <input id="senha" type="password" placeholder="Senha do admin">
+    <button onclick="login()">Entrar</button>
+  </div>
+</div>
+
+<div id="modalRota" class="modal">
+  <div class="box">
+    <button class="close" onclick="fechar('modalRota')">×</button>
+    <h2>Divulgar rota</h2>
+    <input id="routeName" placeholder="Rota. Ex: B-14+B-15/120">
+    <input id="region" placeholder="Região. Ex: Guarulhos">
+    <div class="vehicle-options">
+      <label class="vehicle-check"><input type="checkbox" class="rotaVeiculo" value="FIORINO" checked> FIORINO</label>
+      <label class="vehicle-check"><input type="checkbox" class="rotaVeiculo" value="PASSEIO" checked> PASSEIO</label>
+      <label class="vehicle-check"><input type="checkbox" class="rotaVeiculo" value="MOTO"> MOTO</label>
+      <label class="vehicle-check"><input type="checkbox" class="rotaVeiculo" value="VAN"> VAN</label>
+    </div>
+    <div class="notice">Status inicial: DISPONÍVEL<br>Somente motoristas com veículo selecionado e turno liberado no filtro geral poderão pegar esta rota.</div>
+    <button onclick="criarRota()">Divulgar rota</button>
+  </div>
+</div>
+
+
+<div id="modalRotasMassa" class="modal">
+  <div class="box large">
+    <button class="close" onclick="fechar('modalRotasMassa')">×</button>
+    <h2>Divulgação em massa</h2>
+    <p class="muted">Envie CSV/XLSX com colunas: <strong>route_name, region, allowed_vehicles</strong></p>
+    <div class="notice">Exemplo de veículos:
+FIORINO,MOTO
+PASSEIO
+FIORINO,PASSEIO,VAN
+
+Os turnos permitidos serão definidos pelo filtro geral do painel.</div>
+    <button class="btn-info" onclick="baixarModeloRotas()">Baixar modelo Excel</button>
+    <input type="file" id="arquivoRotas" accept=".csv,.xlsx,.xls">
+    <div class="actions">
+      <button onclick="importarRotasArquivo()">Importar rotas</button>
+      <button class="btn-dark" onclick="fechar('modalRotasMassa')">Cancelar</button>
+    </div>
+    <div id="resultadoRotasMassa" class="notice result" style="display:none"></div>
+  </div>
+</div>
+
+<div id="modalMotorista" class="modal">
+  <div class="box">
+    <button class="close" onclick="fechar('modalMotorista')">×</button>
+    <h2>Cadastrar motorista</h2>
+    <input id="driverId" placeholder="ID">
+    <input id="driverName" placeholder="Nome">
+    <input id="telephone" placeholder="Telefone">
+    <select id="vehicleType">
+      <option>FIORINO</option>
+      <option>PASSEIO</option>
+      <option>MOTO</option>
+      <option>VAN</option>
+    </select>
+
+    <label>Turno do motorista</label>
+    <select id="driverShift">
+      <option>AM</option>
+      <option>SD</option>
+      <option>PM2</option>
+    </select>
+    <button onclick="criarMotorista()">Cadastrar motorista</button>
+    <hr style="border-color:#263044;margin:20px 0">
+    <div class="notice">Importação em massa: envie CSV/XLSX com colunas:
+driver_id, driver_name, vehicle_type, shift, telephone</div>
+    <button class="btn-info" onclick="baixarModeloMotoristas()">Baixar modelo Excel</button>
+    <input type="file" id="arquivoMotoristas" accept=".csv,.xlsx,.xls">
+    <button onclick="importarMotoristasArquivo()">Importar motoristas</button>
+    <div id="resultadoMotoristasMassa" class="notice result" style="display:none"></div>
+  </div>
+</div>
+
+
+<div id="modalConsulta" class="modal">
+  <div class="box">
+    <button class="close" onclick="fechar('modalConsulta')">×</button>
+    <h2>Consultar motorista</h2>
+    <input id="consultaId" placeholder="Digite o ID do motorista">
+    <button onclick="consultarMotorista()">Consultar</button>
+    <div id="boxMotorista" style="display:none;margin-top:16px">
+      <div class="notice" id="dadosMotorista"></div>
+      <label>Telefone</label>
+      <input id="editTelephone" placeholder="Telefone">
+      <label>Tipo de veículo</label>
+      <select id="editVehicleType"><option>FIORINO</option><option>PASSEIO</option><option>MOTO</option><option>VAN</option></select>
+
+      <label>Turno</label>
+      <select id="editShift"><option>AM</option><option>SD</option><option>PM2</option></select>
+      <div class="actions">
+        <button class="btn-info" onclick="salvarMotorista()">Salvar alterações</button>
+        <button class="btn-dark" onclick="toggleMotorista()">Ativar/Desativar</button>
+      </div>
+      <hr style="border-color:#263044;margin:18px 0">
+      <label>Tempo de punição</label>
+      <div class="grid"><input id="punishAmount" type="number" min="1" value="15"><select id="punishUnit"><option value="minutes">Minutos</option><option value="hours" selected>Horas</option><option value="days">Dias</option></select></div>
+      <div class="actions"><button class="btn-warn" onclick="punirMotorista()">Aplicar punição</button><button class="btn-ok" onclick="removerPunicao()">Remover punição</button></div>
+    </div>
+  </div>
+</div>
+
+<div id="modalGalpao" class="modal">
+  <div class="box">
+    <button class="close" onclick="fechar('modalGalpao')">×</button>
+    <h2>Configurar galpão</h2>
+    <input id="hubName" placeholder="Nome do galpão">
+    <input id="hubLat" placeholder="Latitude">
+    <input id="hubLng" placeholder="Longitude">
+    <input id="hubRadius" type="number" placeholder="Raio em metros">
+    <button onclick="salvarGalpao()">Salvar configuração</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://yewfqmgmphswqvpuhfin.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlld2ZxbWdtcGhzd3F2cHVoZmluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNjAzNDcsImV4cCI6MjA5MzYzNjM0N30.DJcUn4nU-yDtCZatK8e8XhDwi2e4qa3oEdyPOdYi4xs";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let adminPass=sessionStorage.getItem("adminPass")||"";
+let rotas=[];
+let waiting=[];
+let motoristaAtual=null;
+let turnosGlobaisConfig=["AM","SD","PM2"];
+
+function abrir(id){document.getElementById(id).classList.add("show")}
+function fechar(id){document.getElementById(id).classList.remove("show")}
+function toast(t,titulo="Aviso",icon="!"){
+  if(document.getElementById("msgIcon")) msgIcon.innerText=icon;
+  if(document.getElementById("msgTitulo")) msgTitulo.innerText=titulo;
+  if(document.getElementById("msgTexto")) msgTexto.innerText=t;
+  abrir("modalMsg");
+}
+
+let acaoConfirmacao=null;
+
+function confirmarModal(titulo,texto,callback,icon="!"){
+  acaoConfirmacao=callback;
+  if(document.getElementById("confirmIcon")) confirmIcon.innerText=icon;
+  if(document.getElementById("confirmTitulo")) confirmTitulo.innerText=titulo;
+  if(document.getElementById("confirmTexto")) confirmTexto.innerText=texto;
+  abrir("modalConfirmacao");
+}
+
+function cancelarConfirmacao(){
+  acaoConfirmacao=null;
+  fechar("modalConfirmacao");
+}
+
+document.addEventListener("click",function(e){
+  if(e.target && e.target.id==="confirmBtn"){
+    const cb=acaoConfirmacao;
+    acaoConfirmacao=null;
+    fechar("modalConfirmacao");
+    if(typeof cb==="function") cb();
+  }
+});
+async function rpc(name,args){const {data,error}=await sb.rpc(name,args);if(error)throw error;if(data&&data.success===false)throw new Error(data.error||"Operação não autorizada.");return data;}
+
+async function login(){
+  const pass=senha.value.trim();
+  const {data,error}=await sb.rpc("admin_login",{p_password:pass});
+  if(error||!data){toast("Senha incorreta.");return}
+  adminPass=pass;
+  sessionStorage.setItem("adminPass",pass);
+  document.body.classList.remove("locked");
+  fechar("modalLogin");
+  iniciar();
+}
+
+function abrirMotoristasGalpao(){
+  abrir("modalMotoristasGalpao");
+  carregarWaiting();
+}
+
+function sair(){
+  sessionStorage.removeItem("adminPass");
+  location.reload();
+}
+
+async function iniciar(){
+  await carregarTurnosGlobais();
+  await carregarRotas();
+  await carregarWaiting();
+
+  sb.channel("admin-routes")
+    .on("postgres_changes",{event:"*",schema:"public",table:"routes"},()=>carregarRotas())
+    .subscribe();
+
+  sb.channel("admin-waiting")
+    .on("postgres_changes",{event:"*",schema:"public",table:"driver_waiting_hub"},()=>carregarWaiting())
+    .subscribe();
+}
+
+async function carregarRotas(){
+  try{
+    rotas = await rpc("admin_get_routes", {p_password:adminPass}) || [];
+  }catch(e){
+    toast("Erro ao carregar rotas.");
+    return;
+  }
+
+  renderRotas();
+}
+
+function fmtVeiculos(v){return Array.isArray(v)?v.join(", "):"-"}
+function fmtData(v){
+  return v ? new Date(v).toLocaleString("pt-BR", {
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric",
+    hour:"2-digit",
+    minute:"2-digit",
+    second:"2-digit"
+  }) : "-";
+}
+
+function renderRotas(){
+  const termo=(busca.value||"").toLowerCase();
+  const lista=rotas.filter(r=>[
+    r.route_name,r.region,r.claimed_by_driver_name,r.claimed_by_driver_id,r.status,r.claimed_vehicle_type,r.claimed_telephone,fmtTurnos(r.allowed_shifts)
+  ].join(" ").toLowerCase().includes(termo));
+
+  listaRotas.innerHTML=lista.length?lista.map(r=>{
+    const disponivel = r.status === "disponivel";
+    const statusTexto = disponivel ? "Disponível" : "Rota repassada";
+    const veiculos = Array.isArray(r.allowed_vehicles) ? r.allowed_vehicles : [];
+    const turnos = Array.isArray(r.allowed_shifts) ? r.allowed_shifts : [];
+
+    return `
+      <div class="item">
+        <input type="checkbox" class="rotaCheck item-check" value="${r.id}">
+
+        <div class="route-main">
+          <h3>${r.route_name}</h3>
+          <p><strong>Região:</strong> ${r.region || "-"}</p>
+
+          <div class="vehicle-tags">
+            ${veiculos.length ? veiculos.map(v=>`<span class="vehicle-tag">${v}</span>`).join("") : `<span class="vehicle-tag">Sem veículo</span>`}
+          </div>
+          <div style="margin-top:8px">
+            ${turnos.length ? turnos.map(t=>`<span class="shift-tag">${t}</span>`).join("") : `<span class="shift-tag">Sem turno</span>`}
+          </div>
+        </div>
+
+        <div class="status-center">
+          <span class="badge ${disponivel ? "ok" : "badge-repassada"}">${statusTexto}</span>
+        </div>
+
+        <div class="route-details">
+          <p><strong>Motorista:</strong> ${r.claimed_by_driver_name || "-"}</p>
+          <p><strong>ID:</strong> ${r.claimed_by_driver_id || "-"}</p>
+          <p><strong>Veículo:</strong> ${r.claimed_vehicle_type || "-"}</p>
+          <p><strong>Turno:</strong> ${r.claimed_shift || r.driver_shift || "-"}</p>
+          <p><strong>Telefone:</strong> ${r.claimed_telephone || "-"}</p>
+          <p><strong>Horário:</strong> ${fmtData(r.claimed_at)}</p>
+        </div>
+
+        <div class="route-actions">
+          <button class="btn-ok" onclick="reabrirRota(${r.id})">Abrir disponível</button>
+          <button class="btn-danger" onclick="excluirRota(${r.id})">Excluir</button>
+        </div>
+      </div>
+    `;
+  }).join(""):'<div class="notice">Nenhuma rota encontrada.</div>';
+}
+
+function veiculosSelecionadosRota(){return Array.from(document.querySelectorAll(".rotaVeiculo:checked")).map(i=>i.value)}
+function turnosSelecionadosRota(){return Array.from(document.querySelectorAll(".globalTurno:checked")).map(i=>i.value)}
+function fmtTurnos(v){return Array.isArray(v)?v.join(", "):"-"}
+
+async function carregarTurnosGlobais(){
+  try{
+    const {data,error}=await sb.rpc("get_hub_config_public");
+    if(error) throw error;
+
+    const cfg = Array.isArray(data) ? data[0] : data;
+
+    if(cfg && Array.isArray(cfg.global_allowed_shifts) && cfg.global_allowed_shifts.length){
+      turnosGlobaisConfig = cfg.global_allowed_shifts;
+    }else{
+      turnosGlobaisConfig = ["AM","SD","PM2"];
+    }
+
+    aplicarTurnosGlobaisNaTela();
+  }catch(e){
+    turnosGlobaisConfig = ["AM","SD","PM2"];
+    aplicarTurnosGlobaisNaTela();
+  }
+}
+
+function aplicarTurnosGlobaisNaTela(){
+  document.querySelectorAll(".globalTurno").forEach(input=>{
+    input.checked = turnosGlobaisConfig.includes(input.value);
+  });
+}
+
+async function salvarTurnosGlobais(){
+  const shifts = turnosSelecionadosRota();
+
+  if(!shifts.length){
+    toast("Selecione pelo menos um turno.");
+    aplicarTurnosGlobaisNaTela();
+    return;
+  }
+
+  turnosGlobaisConfig = shifts;
+
+  try{
+    await rpc("admin_update_all_route_shifts", {
+      p_password: adminPass,
+      p_allowed_shifts: shifts
+    });
+
+    toast("Turnos liberados atualizados.");
+    carregarRotas();
+  }catch(e){
+    toast(e.message || "Erro ao atualizar turnos.");
+    await carregarTurnosGlobais();
+  }
+}
+
+async function criarRota(){
+  const selected=veiculosSelecionadosRota();
+  const shifts=turnosSelecionadosRota();
+  if(!routeName.value.trim()||!region.value.trim()||!selected.length||!shifts.length){toast("Preencha rota, região, veículo e libere pelo menos um turno no filtro geral.");return}
+  try{
+    await rpc("admin_create_route",{
+      p_password:adminPass,
+      p_route_name:routeName.value.trim(),
+      p_region:region.value.trim(),
+      p_allowed_vehicles:selected,
+      p_allowed_shifts:shifts
+    });
+    routeName.value="";
+    region.value="";
+    fechar("modalRota");
+    toast("Rota divulgada.");
+    carregarRotas();
+  }catch(e){toast(e.message||"Erro ao criar rota.")}
+}
+
+async function excluirRota(id){
+  confirmarModal("Excluir rota","Deseja excluir esta rota do sistema?",async()=>{
+    try{
+      await rpc("admin_delete_route",{p_password:adminPass,p_route_id:id});
+      toast("Rota excluída.","Tudo certo","✓");
+      carregarRotas();
+    }catch(e){
+      toast(e.message||"Erro ao excluir.","Erro","!");
+    }
+  });
+}
+
+async function reabrirRota(id){
+  confirmarModal("Abrir rota novamente","Deseja deixar esta rota disponível para os motoristas?",async()=>{
+    try{
+      await rpc("admin_reopen_route",{p_password:adminPass,p_route_id:id});
+      toast("Rota reaberta.","Tudo certo","✓");
+      carregarRotas();
+    }catch(e){
+      toast(e.message||"Erro ao reabrir.","Erro","!");
+    }
+  },"?");
+}
+
+async function criarMotorista(){
+  try{
+    await rpc("admin_create_driver",{
+      p_password:adminPass,
+      p_driver_id:driverId.value.trim(),
+      p_driver_name:driverName.value.trim(),
+      p_vehicle_type:vehicleType.value,
+      p_shift:driverShift.value,
+      p_telephone:telephone.value.trim()
+    });
+    driverId.value="";
+    driverName.value="";
+    telephone.value="";
+    driverShift.value="AM";
+    fechar("modalMotorista");
+    toast("Motorista cadastrado.");
+  }catch(e){toast(e.message||"Erro ao cadastrar motorista.")}
+}
+
+
+function idsRotasSelecionadas(){return Array.from(document.querySelectorAll(".rotaCheck:checked")).map(i=>Number(i.value)).filter(Boolean)}
+function selecionarRotasVisiveis(){document.querySelectorAll(".rotaCheck").forEach(i=>i.checked=true)}
+function desmarcarRotas(){document.querySelectorAll(".rotaCheck").forEach(i=>i.checked=false)}
+async function limparRotasSelecionadas(){
+  const ids=idsRotasSelecionadas();
+  if(!ids.length)return toast("Selecione ao menos uma rota.","Atenção","!");
+  confirmarModal("Excluir selecionadas",`Deseja excluir ${ids.length} rota(s) selecionada(s)?`,async()=>{
+    try{
+      for(const id of ids)await rpc("admin_delete_route",{p_password:adminPass,p_route_id:id});
+      toast("Rotas excluídas.","Tudo certo","✓");
+      carregarRotas();
+    }catch(e){
+      toast(e.message||"Erro ao excluir rotas.","Erro","!");
+    }
+  });
+}
+function baixarModeloRotas(){
+  const dados=[
+    ["route_name","region","allowed_vehicles"],
+    ["B-14+B-15/120","Guarulhos","FIORINO,PASSEIO"],
+    ["A-10+A-11/95","São Paulo","MOTO"]
+  ];
+  const ws=XLSX.utils.aoa_to_sheet(dados),wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Rotas");
+  XLSX.writeFile(wb,"modelo_rotas.xlsx");
+}
+async function lerArquivo(file){const nome=file.name.toLowerCase();if(nome.endsWith(".xlsx")||nome.endsWith(".xls")){const buffer=await file.arrayBuffer();const wb=XLSX.read(buffer,{type:"array"});const ws=wb.Sheets[wb.SheetNames[0]];return XLSX.utils.sheet_to_json(ws,{defval:""})}if(nome.endsWith(".csv")){const texto=await file.text();const linhas=texto.split(/\r?\n/).filter(Boolean).map(l=>l.split(","));const header=linhas[0].map(h=>h.trim());return linhas.slice(1).map(l=>Object.fromEntries(header.map((h,i)=>[h,l[i]||""])))}throw new Error("Formato inválido.")}
+async function importarMotoristasArquivo(){
+  const file = arquivoMotoristas.files[0];
+
+  if(!file){
+    return toast("Selecione um arquivo.");
+  }
+
+  const rows = await lerArquivo(file);
+  let ok = 0;
+  let erros = [];
+
+  for(let i = 0; i < rows.length; i++){
+    const r = rows[i];
+
+    const body = {
+      p_password: adminPass,
+      p_driver_id: normalizarTexto(r.driver_id),
+      p_driver_name: normalizarTexto(r.driver_name),
+      p_vehicle_type: normalizarVeiculo(r.vehicle_type),
+      p_shift: normalizarTurno(r.shift),
+      p_telephone: normalizarTexto(r.telephone)
+    };
+
+    if(!body.p_driver_id || !body.p_driver_name || !validarVeiculo(body.p_vehicle_type) || !validarTurno(body.p_shift)){
+      erros.push(`Linha ${i + 2}: inválida`);
+      continue;
+    }
+
+    try{
+      await rpc("admin_create_driver", body);
+      ok++;
+    }catch(e){
+      erros.push(`Linha ${i + 2}: ${e.message}`);
+    }
+  }
+
+  resultadoMotoristasMassa.style.display = "block";
+  resultadoMotoristasMassa.innerText =
+    "Importados/atualizados: " + ok +
+    (erros.length ? "\n\nOcorrências:\n" + erros.join("\n") : "");
+
+  toast("Importação finalizada.");
+}
+async function importarRotasArquivo(){
+  const file = arquivoRotas.files[0];
+
+  if(!file){
+    return toast("Selecione um arquivo.");
+  }
+
+  const shiftsGlobais = turnosSelecionadosRota();
+
+  if(!shiftsGlobais.length){
+    return toast("Libere pelo menos um turno no filtro geral.");
+  }
+
+  const rows = await lerArquivo(file);
+  let ok = 0;
+  let erros = [];
+
+  for(let i = 0; i < rows.length; i++){
+    const r = rows[i];
+
+    const route = normalizarTexto(r.route_name);
+    const reg = normalizarTexto(r.region);
+    const veic = String(r.allowed_vehicles || "")
+      .split(",")
+      .map(v => v.trim().toUpperCase())
+      .filter(Boolean);
+
+    if(!route || !reg || !veic.length){
+      erros.push(`Linha ${i + 2}: inválida`);
+      continue;
+    }
+
+    try{
+      await rpc("admin_create_route", {
+        p_password: adminPass,
+        p_route_name: route,
+        p_region: reg,
+        p_allowed_vehicles: [...new Set(veic)],
+        p_allowed_shifts: shiftsGlobais
+      });
+
+      ok++;
+    }catch(e){
+      erros.push(`Linha ${i + 2}: ${e.message}`);
+    }
+  }
+
+  resultadoRotasMassa.style.display = "block";
+  resultadoRotasMassa.innerText =
+    "Rotas importadas: " + ok +
+    (erros.length ? "\n\nOcorrências:\n" + erros.join("\n") : "");
+
+  carregarRotas();
+  toast("Importação finalizada.");
+}
+async function consultarMotorista(){const id=consultaId.value.trim();if(!id)return toast("Informe o ID.");try{const data=await rpc("admin_get_driver",{p_password:adminPass,p_driver_id:id});if(!data)return toast("Motorista não encontrado.");motoristaAtual=data;boxMotorista.style.display="block";dadosMotorista.innerHTML=`ID: <strong>${data.driver_id}</strong><br>Nome: <strong>${data.driver_name}</strong><br>Status: <strong>${data.active?"ATIVO":"DESATIVADO"}</strong><br>Turno: <strong>${data.shift||"-"}</strong><br>Punição até: <strong>${fmtData(data.punished_until)}</strong>`;editTelephone.value=data.telephone||"";editVehicleType.value=data.vehicle_type||"FIORINO";editShift.value=data.shift||"AM"}catch(e){toast(e.message||"Erro ao consultar.")}}
+async function salvarMotorista(){if(!motoristaAtual)return;try{await rpc("admin_update_driver",{p_password:adminPass,p_driver_id:motoristaAtual.driver_id,p_vehicle_type:editVehicleType.value,p_shift:editShift.value,p_telephone:editTelephone.value.trim()});toast("Motorista atualizado.");consultarMotorista()}catch(e){toast(e.message||"Erro ao salvar.")}}
+async function toggleMotorista(){if(!motoristaAtual)return;try{await rpc("admin_toggle_driver",{p_password:adminPass,p_driver_id:motoristaAtual.driver_id});toast("Status alterado.");consultarMotorista()}catch(e){toast(e.message||"Erro ao alterar status.")}}
+async function punirMotorista(){if(!motoristaAtual)return;try{await rpc("admin_punish_driver",{p_password:adminPass,p_driver_id:motoristaAtual.driver_id,p_amount:Number(punishAmount.value||15),p_unit:punishUnit.value});toast("Punição aplicada.");consultarMotorista()}catch(e){toast(e.message||"Erro ao aplicar punição.")}}
+async function removerPunicao(){if(!motoristaAtual)return;try{await rpc("admin_remove_punish_driver",{p_password:adminPass,p_driver_id:motoristaAtual.driver_id});toast("Punição removida.");consultarMotorista()}catch(e){toast(e.message||"Erro ao remover punição.")}}
+
+async function abrirGalpao(){
+  const {data}=await sb.rpc("get_hub_config_public");
+  const cfg=Array.isArray(data)?data[0]:data;
+  if(cfg){
+    hubName.value=cfg.hub_name||"Galpão";
+    hubLat.value=cfg.latitude||"";
+    hubLng.value=cfg.longitude||"";
+    hubRadius.value=cfg.radius_meters||300;
+  }
+  abrir("modalGalpao");
+}
+
+async function salvarGalpao(){
+  const {data,error}=await sb.rpc("admin_save_hub_config",{
+    p_password:adminPass,
+    p_hub_name:hubName.value.trim()||"Galpão",
+    p_latitude:Number(hubLat.value),
+    p_longitude:Number(hubLng.value),
+    p_radius_meters:Number(hubRadius.value)
+  });
+  if(error||!data.success){toast(data?.error||"Erro ao salvar galpão.");return}
+  fechar("modalGalpao");
+  toast("Galpão atualizado.");
+}
+
+async function carregarWaiting(){
+  if(!adminPass)return;
+  const {data,error}=await sb.rpc("admin_get_waiting",{p_password:adminPass});
+  if(error){listaWaiting.innerHTML='<div class="notice">Erro ao carregar lista.</div>';return}
+  waiting=(data||[]).slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  listaWaiting.innerHTML=waiting.length?waiting.map(w=>`
+    <div class="item">
+      <input type="checkbox" class="waitingCheck item-check" value="${w.id}">
+
+      <div class="waiting-main">
+        <h3>${w.driver_name || "-"}</h3>
+        <p><strong>ID:</strong> ${w.driver_id || "-"} | <strong>Veículo:</strong> ${w.vehicle_type || "-"} | <strong>Turno:</strong> ${w.shift || "-"}</p>
+        <p><strong>Telefone:</strong> ${w.telephone || "-"}</p>
+      </div>
+
+      <div class="route-details">
+        <p><strong>Distância:</strong> ${Math.round(Number(w.distance_meters||0))}m</p>
+        <p><strong>Horário:</strong> <span class="waiting-time-badge">${fmtData(w.created_at)}</span></p>
+        <p><strong>Status:</strong> ${w.status || "aguardando"}</p>
+      </div>
+
+      <div class="route-actions">
+        <button class="btn-danger" onclick="excluirWaiting(${w.id})">Excluir</button>
+      </div>
+    </div>
+  `).join(""):'<div class="notice">Nenhum motorista aguardando rota no galpão hoje.</div>';
+}
+
+async function excluirWaiting(id){
+  confirmarModal("Remover presença","Deseja remover este motorista da lista do galpão?",async()=>{
+    try{
+      await rpc("admin_delete_waiting",{p_password:adminPass,p_id:id});
+      toast("Presença removida.","Tudo certo","✓");
+      carregarWaiting();
+    }catch(e){
+      toast(e.message||"Erro ao remover.","Erro","!");
+    }
+  });
+}
+</script>
+</body>
+</html>
