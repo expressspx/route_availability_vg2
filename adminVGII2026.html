@@ -658,6 +658,48 @@ input:focus,select:focus{
   z-index: 10000 !important;
 }
 
+
+.import-progress{
+  display:none;
+  margin-top:14px;
+  padding:14px;
+  border:1px solid rgba(148,163,184,.24);
+  background:#020617;
+  border-radius:16px;
+}
+
+.import-progress-title{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  font-weight:900;
+  color:#fff;
+  margin-bottom:10px;
+}
+
+.import-progress-bar{
+  width:100%;
+  height:16px;
+  border-radius:999px;
+  overflow:hidden;
+  background:#111827;
+  border:1px solid #334155;
+}
+
+.import-progress-fill{
+  width:0%;
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(90deg,#ee4d2d,#ff7a45);
+  transition:width .18s ease;
+}
+
+.import-progress-status{
+  margin-top:10px;
+  color:#cbd5e1;
+  font-size:14px;
+}
+
 </style>
 </head>
 
@@ -807,6 +849,18 @@ Os turnos permitidos serão definidos pelo filtro geral do painel.</div>
       <button onclick="importarRotasArquivo()">Importar rotas</button>
       <button class="btn-dark" onclick="fechar('modalRotasMassa')">Cancelar</button>
     </div>
+    
+    <div id="progressRotas" class="import-progress">
+      <div class="import-progress-title">
+        <span>Importando rotas</span>
+        <span id="progressRotasPercent">0%</span>
+      </div>
+      <div class="import-progress-bar">
+        <div id="progressRotasFill" class="import-progress-fill"></div>
+      </div>
+      <div id="progressRotasStatus" class="import-progress-status">Aguardando início...</div>
+    </div>
+
     <div id="resultadoRotasMassa" class="notice result" style="display:none"></div>
   </div>
 </div>
@@ -838,6 +892,18 @@ driver_id, driver_name, vehicle_type, shift, telephone</div>
     <button class="btn-info" onclick="baixarModeloMotoristas()">Baixar modelo Excel</button>
     <input type="file" id="arquivoMotoristas" accept=".csv,.xlsx,.xls">
     <button onclick="importarMotoristasArquivo()">Importar motoristas</button>
+    
+    <div id="progressMotoristas" class="import-progress">
+      <div class="import-progress-title">
+        <span>Importando motoristas</span>
+        <span id="progressMotoristasPercent">0%</span>
+      </div>
+      <div class="import-progress-bar">
+        <div id="progressMotoristasFill" class="import-progress-fill"></div>
+      </div>
+      <div id="progressMotoristasStatus" class="import-progress-status">Aguardando início...</div>
+    </div>
+
     <div id="resultadoMotoristasMassa" class="notice result" style="display:none"></div>
   </div>
 </div>
@@ -896,6 +962,13 @@ let motoristaAtual=null;
 let turnosGlobaisConfig=["AM","SD","PM2"];
 
 function abrir(id){document.getElementById(id).classList.add("show")}
+function avisarAdmin(texto,titulo="Aviso",icone="!"){
+  if(typeof toast === "function"){
+    toast(texto,titulo,icone);
+  }else{
+    alert((titulo?titulo+"\n":"")+texto);
+  }
+}
 function fechar(id){document.getElementById(id).classList.remove("show")}
 function toast(t,titulo="Aviso",icon="!"){
   if(document.getElementById("msgIcon")) msgIcon.innerText=icon;
@@ -1041,6 +1114,7 @@ function veiculosSelecionadosRota(){return Array.from(document.querySelectorAll(
 function turnosSelecionadosRota(){return Array.from(document.querySelectorAll(".globalTurno:checked")).map(i=>i.value)}
 function fmtTurnos(v){return Array.isArray(v)?v.join(", "):"-"}
 
+
 async function carregarTurnosGlobais(){
   try{
     const {data,error}=await sb.rpc("get_hub_config_public");
@@ -1071,7 +1145,7 @@ async function salvarTurnosGlobais(){
   const shifts = turnosSelecionadosRota();
 
   if(!shifts.length){
-    toast("Selecione pelo menos um turno.");
+    toast("Selecione pelo menos um turno.","Atenção","!");
     aplicarTurnosGlobaisNaTela();
     return;
   }
@@ -1084,13 +1158,14 @@ async function salvarTurnosGlobais(){
       p_allowed_shifts: shifts
     });
 
-    toast("Turnos liberados atualizados.");
+    toast("Turnos liberados salvos com sucesso.","Tudo certo","✓");
     carregarRotas();
   }catch(e){
-    toast(e.message || "Erro ao atualizar turnos.");
+    toast(e.message || "Erro ao salvar os turnos.","Erro","!");
     await carregarTurnosGlobais();
   }
 }
+
 
 async function criarRota(){
   const selected=veiculosSelecionadosRota();
@@ -1172,115 +1247,18 @@ async function limparRotasSelecionadas(){
     }
   });
 }
-function baixarModeloRotas(){
-  const dados=[
-    ["route_name","region","allowed_vehicles"],
-    ["B-14+B-15/120","Guarulhos","FIORINO,PASSEIO"],
-    ["A-10+A-11/95","São Paulo","MOTO"]
-  ];
-  const ws=XLSX.utils.aoa_to_sheet(dados),wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,"Rotas");
-  XLSX.writeFile(wb,"modelo_rotas.xlsx");
-}
-async function lerArquivo(file){const nome=file.name.toLowerCase();if(nome.endsWith(".xlsx")||nome.endsWith(".xls")){const buffer=await file.arrayBuffer();const wb=XLSX.read(buffer,{type:"array"});const ws=wb.Sheets[wb.SheetNames[0]];return XLSX.utils.sheet_to_json(ws,{defval:""})}if(nome.endsWith(".csv")){const texto=await file.text();const linhas=texto.split(/\r?\n/).filter(Boolean).map(l=>l.split(","));const header=linhas[0].map(h=>h.trim());return linhas.slice(1).map(l=>Object.fromEntries(header.map((h,i)=>[h,l[i]||""])))}throw new Error("Formato inválido.")}
-async function importarMotoristasArquivo(){
-  const file = arquivoMotoristas.files[0];
 
-  if(!file){
-    return toast("Selecione um arquivo.");
-  }
 
-  const rows = await lerArquivo(file);
-  let ok = 0;
-  let erros = [];
 
-  for(let i = 0; i < rows.length; i++){
-    const r = rows[i];
 
-    const body = {
-      p_password: adminPass,
-      p_driver_id: normalizarTexto(r.driver_id),
-      p_driver_name: normalizarTexto(r.driver_name),
-      p_vehicle_type: normalizarVeiculo(r.vehicle_type),
-      p_shift: normalizarTurno(r.shift),
-      p_telephone: normalizarTexto(r.telephone)
-    };
 
-    if(!body.p_driver_id || !body.p_driver_name || !validarVeiculo(body.p_vehicle_type) || !validarTurno(body.p_shift)){
-      erros.push(`Linha ${i + 2}: inválida`);
-      continue;
-    }
 
-    try{
-      await rpc("admin_create_driver", body);
-      ok++;
-    }catch(e){
-      erros.push(`Linha ${i + 2}: ${e.message}`);
-    }
-  }
 
-  resultadoMotoristasMassa.style.display = "block";
-  resultadoMotoristasMassa.innerText =
-    "Importados/atualizados: " + ok +
-    (erros.length ? "\n\nOcorrências:\n" + erros.join("\n") : "");
 
-  toast("Importação finalizada.");
-}
-async function importarRotasArquivo(){
-  const file = arquivoRotas.files[0];
 
-  if(!file){
-    return toast("Selecione um arquivo.");
-  }
 
-  const shiftsGlobais = turnosSelecionadosRota();
 
-  if(!shiftsGlobais.length){
-    return toast("Libere pelo menos um turno no filtro geral.");
-  }
 
-  const rows = await lerArquivo(file);
-  let ok = 0;
-  let erros = [];
-
-  for(let i = 0; i < rows.length; i++){
-    const r = rows[i];
-
-    const route = normalizarTexto(r.route_name);
-    const reg = normalizarTexto(r.region);
-    const veic = String(r.allowed_vehicles || "")
-      .split(",")
-      .map(v => v.trim().toUpperCase())
-      .filter(Boolean);
-
-    if(!route || !reg || !veic.length){
-      erros.push(`Linha ${i + 2}: inválida`);
-      continue;
-    }
-
-    try{
-      await rpc("admin_create_route", {
-        p_password: adminPass,
-        p_route_name: route,
-        p_region: reg,
-        p_allowed_vehicles: [...new Set(veic)],
-        p_allowed_shifts: shiftsGlobais
-      });
-
-      ok++;
-    }catch(e){
-      erros.push(`Linha ${i + 2}: ${e.message}`);
-    }
-  }
-
-  resultadoRotasMassa.style.display = "block";
-  resultadoRotasMassa.innerText =
-    "Rotas importadas: " + ok +
-    (erros.length ? "\n\nOcorrências:\n" + erros.join("\n") : "");
-
-  carregarRotas();
-  toast("Importação finalizada.");
-}
 async function consultarMotorista(){const id=consultaId.value.trim();if(!id)return toast("Informe o ID.");try{const data=await rpc("admin_get_driver",{p_password:adminPass,p_driver_id:id});if(!data)return toast("Motorista não encontrado.");motoristaAtual=data;boxMotorista.style.display="block";dadosMotorista.innerHTML=`ID: <strong>${data.driver_id}</strong><br>Nome: <strong>${data.driver_name}</strong><br>Status: <strong>${data.active?"ATIVO":"DESATIVADO"}</strong><br>Turno: <strong>${data.shift||"-"}</strong><br>Punição até: <strong>${fmtData(data.punished_until)}</strong>`;editTelephone.value=data.telephone||"";editVehicleType.value=data.vehicle_type||"FIORINO";editShift.value=data.shift||"AM"}catch(e){toast(e.message||"Erro ao consultar.")}}
 async function salvarMotorista(){if(!motoristaAtual)return;try{await rpc("admin_update_driver",{p_password:adminPass,p_driver_id:motoristaAtual.driver_id,p_vehicle_type:editVehicleType.value,p_shift:editShift.value,p_telephone:editTelephone.value.trim()});toast("Motorista atualizado.");consultarMotorista()}catch(e){toast(e.message||"Erro ao salvar.")}}
 async function toggleMotorista(){if(!motoristaAtual)return;try{await rpc("admin_toggle_driver",{p_password:adminPass,p_driver_id:motoristaAtual.driver_id});toast("Status alterado.");consultarMotorista()}catch(e){toast(e.message||"Erro ao alterar status.")}}
@@ -1351,6 +1329,287 @@ async function excluirWaiting(id){
     }
   });
 }
+
+
+function baixarArquivoModelo(nomeArquivo, dados, nomeAba){
+  try{
+    if(typeof XLSX === "undefined"){
+      toast("A biblioteca de Excel ainda não carregou. Recarregue a página e tente novamente.","Atenção","!");
+      return;
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(dados);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, nomeAba || "Modelo");
+    XLSX.writeFile(wb, nomeArquivo);
+  }catch(e){
+    toast(e.message || "Não foi possível baixar o modelo.","Erro","!");
+  }
+}
+
+function baixarModeloMotoristas(){
+  baixarArquivoModelo("modelo_motoristas.xlsx", [
+    ["driver_id","driver_name","vehicle_type","shift","telephone"],
+    ["123456","MOTORISTA EXEMPLO","FIORINO","AM","11999998888"],
+    ["789012","MOTORISTA EXEMPLO 2","PASSEIO","SD","11988887777"],
+    ["555888","MOTORISTA EXEMPLO 3","MOTO","PM2","11977776666"]
+  ], "Motoristas");
+}
+
+function baixarModeloRotas(){
+  baixarArquivoModelo("modelo_rotas.xlsx", [
+    ["route_name","region","allowed_vehicles"],
+    ["B-14+B-15/120","Guarulhos","FIORINO,PASSEIO"],
+    ["A-10+A-11/95","São Paulo","MOTO"],
+    ["C-01+C-02/80","Jardim Adriana","FIORINO,PASSEIO,VAN"]
+  ], "Rotas");
+}
+
+async function lerArquivo(file){
+  if(!file){
+    throw new Error("Nenhum arquivo selecionado.");
+  }
+
+  if(typeof XLSX === "undefined"){
+    throw new Error("Biblioteca de Excel não carregada. Recarregue a página.");
+  }
+
+  const nome = file.name.toLowerCase();
+
+  if(nome.endsWith(".xlsx") || nome.endsWith(".xls")){
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: "array" });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    return XLSX.utils.sheet_to_json(ws, { defval: "", raw: false });
+  }
+
+  if(nome.endsWith(".csv")){
+    const texto = await file.text();
+    const wb = XLSX.read(texto, { type: "string" });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    return XLSX.utils.sheet_to_json(ws, { defval: "", raw: false });
+  }
+
+  throw new Error("Formato inválido. Use CSV, XLS ou XLSX.");
+}
+
+
+function atualizarProgressoImportacao(tipo, atual, total, status){
+  const box = document.getElementById(tipo === "motoristas" ? "progressMotoristas" : "progressRotas");
+  const fill = document.getElementById(tipo === "motoristas" ? "progressMotoristasFill" : "progressRotasFill");
+  const percentEl = document.getElementById(tipo === "motoristas" ? "progressMotoristasPercent" : "progressRotasPercent");
+  const statusEl = document.getElementById(tipo === "motoristas" ? "progressMotoristasStatus" : "progressRotasStatus");
+
+  if(!box || !fill || !percentEl || !statusEl) return;
+
+  const totalSeguro = total > 0 ? total : 1;
+  const pct = Math.min(100, Math.round((atual / totalSeguro) * 100));
+
+  box.style.display = "block";
+  fill.style.width = pct + "%";
+  percentEl.innerText = pct + "%";
+  statusEl.innerText = status || `Processando ${atual} de ${total}`;
+}
+
+function resetarProgressoImportacao(tipo){
+  atualizarProgressoImportacao(tipo, 0, 1, "Preparando arquivo...");
+}
+
+async function importarMotoristasArquivo(){
+  const input = document.getElementById("arquivoMotoristas");
+  const file = input && input.files ? input.files[0] : null;
+
+  if(!file){
+    return toast("Selecione um arquivo para importar.","Atenção","!");
+  }
+
+  resetarProgressoImportacao("motoristas");
+
+  let rows = [];
+
+  try{
+    rows = await lerArquivo(file);
+  }catch(e){
+    atualizarProgressoImportacao("motoristas", 0, 1, "Erro ao ler arquivo.");
+    return toast(e.message || "Não foi possível ler o arquivo.","Erro","!");
+  }
+
+  if(!rows.length){
+    atualizarProgressoImportacao("motoristas", 0, 1, "Arquivo vazio.");
+    return toast("O arquivo está vazio ou sem dados válidos.","Atenção","!");
+  }
+
+  let ok = 0;
+  let erros = [];
+
+  atualizarProgressoImportacao("motoristas", 0, rows.length, "Iniciando importação...");
+
+  for(let i = 0; i < rows.length; i++){
+    const r = rows[i];
+
+    atualizarProgressoImportacao("motoristas", i, rows.length, "Processando motorista " + (i + 1) + " de " + rows.length + "...");
+
+    const body = {
+      p_password: adminPass,
+      p_driver_id: normalizarTexto(r.driver_id || r.ID || r.id || r["ID"]),
+      p_driver_name: normalizarTexto(r.driver_name || r.NOME || r.nome || r.name || r["DRIVER NAME"]),
+      p_vehicle_type: normalizarVeiculo(r.vehicle_type || r.VEICULO || r.veiculo || r["vehicle type"] || r["VEÍCULO"]),
+      p_shift: normalizarTurno(r.shift || r.TURNO || r.turno || r["Turno"]),
+      p_telephone: normalizarTexto(r.telephone || r.TELEFONE || r.telefone || r.phone || r["Telefone"])
+    };
+
+    if(!body.p_shift){
+      body.p_shift = "AM";
+    }
+
+    if(!body.p_driver_id || !body.p_driver_name || !validarVeiculo(body.p_vehicle_type) || !validarTurno(body.p_shift)){
+      erros.push("Linha " + (i + 2) + ": inválida. Confira driver_id, driver_name, vehicle_type e shift.");
+      atualizarProgressoImportacao("motoristas", i + 1, rows.length, "Linha " + (i + 2) + " ignorada.");
+      await new Promise(resolve => setTimeout(resolve, 10));
+      continue;
+    }
+
+    try{
+      await rpc("admin_create_driver", body);
+      ok++;
+    }catch(e){
+      erros.push("Linha " + (i + 2) + ": " + e.message);
+    }
+
+    atualizarProgressoImportacao("motoristas", i + 1, rows.length, "Processados " + (i + 1) + " de " + rows.length + ".");
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+
+  atualizarProgressoImportacao("motoristas", rows.length, rows.length, "Importação concluída.");
+
+  const resultado = document.getElementById("resultadoMotoristasMassa");
+  if(resultado){
+    resultado.style.display = "block";
+    resultado.innerText = "Importados/atualizados: " + ok + (erros.length ? "\n\nOcorrências:\n" + erros.join("\n") : "");
+  }
+
+  if(ok > 0){
+    toast("Importação finalizada. Motoristas importados/atualizados: " + ok,"Tudo certo","✓");
+  }else{
+    toast("Nenhum motorista foi importado. Confira se a planilha está no modelo correto.","Atenção","!");
+  }
+}
+
+async function importarRotasArquivo(){
+  const input = document.getElementById("arquivoRotas");
+  const file = input && input.files ? input.files[0] : null;
+
+  if(!file){
+    return toast("Selecione um arquivo para importar.","Atenção","!");
+  }
+
+  const shiftsGlobais = typeof turnosSelecionadosRota === "function" ? turnosSelecionadosRota() : ["AM","SD","PM2"];
+
+  if(!shiftsGlobais.length){
+    return toast("Libere pelo menos um turno no filtro geral antes de importar as rotas.","Atenção","!");
+  }
+
+  resetarProgressoImportacao("rotas");
+
+  let rows = [];
+
+  try{
+    rows = await lerArquivo(file);
+  }catch(e){
+    atualizarProgressoImportacao("rotas", 0, 1, "Erro ao ler arquivo.");
+    return toast(e.message || "Não foi possível ler o arquivo.","Erro","!");
+  }
+
+  if(!rows.length){
+    atualizarProgressoImportacao("rotas", 0, 1, "Arquivo vazio.");
+    return toast("O arquivo está vazio ou sem dados válidos.","Atenção","!");
+  }
+
+  let ok = 0;
+  let erros = [];
+
+  atualizarProgressoImportacao("rotas", 0, rows.length, "Iniciando importação...");
+
+  for(let i = 0; i < rows.length; i++){
+    const r = rows[i];
+
+    atualizarProgressoImportacao("rotas", i, rows.length, "Processando rota " + (i + 1) + " de " + rows.length + "...");
+
+    const route = normalizarTexto(r.route_name || r.ROTA || r.rota || r["Rota"]);
+    const reg = normalizarTexto(r.region || r.REGIAO || r.regiao || r["REGIÃO"] || r["Região"]);
+    const veic = String(r.allowed_vehicles || r.VEICULOS || r.veiculos || r["VEÍCULOS"] || r["Veículos"] || "")
+      .split(",")
+      .map(v => v.trim().toUpperCase())
+      .filter(Boolean);
+
+    if(!route || !reg || !veic.length || veic.some(v => !validarVeiculo(v))){
+      erros.push("Linha " + (i + 2) + ": inválida. Confira route_name, region e allowed_vehicles.");
+      atualizarProgressoImportacao("rotas", i + 1, rows.length, "Linha " + (i + 2) + " ignorada.");
+      await new Promise(resolve => setTimeout(resolve, 10));
+      continue;
+    }
+
+    try{
+      await rpc("admin_create_route", {
+        p_password: adminPass,
+        p_route_name: route,
+        p_region: reg,
+        p_allowed_vehicles: [...new Set(veic)],
+        p_allowed_shifts: shiftsGlobais
+      });
+
+      ok++;
+    }catch(e){
+      erros.push("Linha " + (i + 2) + ": " + e.message);
+    }
+
+    atualizarProgressoImportacao("rotas", i + 1, rows.length, "Processadas " + (i + 1) + " de " + rows.length + ".");
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+
+  atualizarProgressoImportacao("rotas", rows.length, rows.length, "Importação concluída.");
+
+  const resultado = document.getElementById("resultadoRotasMassa");
+  if(resultado){
+    resultado.style.display = "block";
+    resultado.innerText = "Rotas importadas: " + ok + (erros.length ? "\n\nOcorrências:\n" + erros.join("\n") : "");
+  }
+
+  carregarRotas();
+
+  if(ok > 0){
+    toast("Importação finalizada. Rotas importadas: " + ok,"Tudo certo","✓");
+  }else{
+    toast("Nenhuma rota foi importada. Confira se a planilha está no modelo correto.","Atenção","!");
+  }
+}
+
+window.baixarModeloMotoristas = baixarModeloMotoristas;
+window.baixarModeloRotas = baixarModeloRotas;
+window.importarMotoristasArquivo = importarMotoristasArquivo;
+window.importarRotasArquivo = importarRotasArquivo;
+
+
+function normalizarTexto(v){
+  return String(v || "").trim();
+}
+
+function normalizarVeiculo(v){
+  return String(v || "").trim().toUpperCase();
+}
+
+function normalizarTurno(v){
+  return String(v || "").trim().toUpperCase();
+}
+
+function validarVeiculo(v){
+  return ["FIORINO","PASSEIO","MOTO","VAN"].includes(String(v || "").toUpperCase());
+}
+
+function validarTurno(v){
+  return ["AM","SD","PM2"].includes(String(v || "").toUpperCase());
+}
+
 </script>
 </body>
 </html>
