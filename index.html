@@ -276,8 +276,7 @@ async function carregarRotas(){
       <div class="status ${disponivel?'ok':minha?'mine':'done'}">${disponivel?'DISPONÍVEL':minha?'ESSA ROTA É SUA':'ROTA REPASSADA'}</div>
       <h2>ROTA: ${r.route_name}</h2>
       <p><strong>Região:</strong> ${r.region}</p>
-      <div>${veiculos(r.allowed_vehicles).map(v=>`<span class="tag">● ${v}</span>`).join("")}</div>
-      <div>${veiculos(r.allowed_shifts).map(t=>`<span class="tag">TURNO ${t}</span>`).join("")}</div>
+      <div style="margin-bottom:12px">${veiculos(r.allowed_vehicles).map(v=>`<span class="tag">● ${v}</span>`).join("")}</div>
       ${disponivel?`<button onclick='abrirConfirmacao(${JSON.stringify(r)})'>Pegar rota</button>`:minha?`<button disabled>Essa rota é sua</button>`:`<button disabled>Indisponível</button>`}
     `;
     rotas.appendChild(card);
