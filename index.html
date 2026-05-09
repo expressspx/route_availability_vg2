@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Rotas Disponíveis</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:radial-gradient(circle at top,#172033,#050816 48%,#02040d);color:#fff;min-height:100vh}
+header{text-align:center;padding:34px 18px 12px}
+h1{margin:0;font-size:clamp(34px,6vw,64px);font-weight:900}
+p{color:#cbd5e1}
+.top{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+button{border:0;border-radius:16px;padding:15px 20px;background:linear-gradient(90deg,#ee4d2d,#ff7a45);color:#fff;font-weight:900;cursor:pointer;box-shadow:0 14px 28px rgba(238,77,45,.22)}
+button:disabled{background:#111827;color:#64748b;border:1px solid #263044;box-shadow:none}
+.btn-green{background:linear-gradient(90deg,#16a34a,#22c55e)}
+.btn-dark{background:#334155}
+.grid{max-width:1180px;margin:0 auto;padding:30px 18px 60px;display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:22px}
+.card{position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(30,41,59,.96),rgba(15,23,42,.96));border:1px solid rgba(148,163,184,.28);border-radius:24px;padding:24px;box-shadow:0 24px 50px rgba(0,0,0,.35)}
+.status{position:absolute;top:20px;right:-48px;transform:rotate(10deg);padding:8px 62px;font-size:12px;font-weight:900;letter-spacing:2px}
+.status.ok{background:rgba(22,101,52,.8);color:#bbf7d0;border:1px solid #22c55e}
+.status.done{background:rgba(113,63,18,.8);color:#fde68a;border:1px solid #facc15}
+.status.mine{background:linear-gradient(90deg,#1d4ed8,#38bdf8);color:#dbeafe;border:1px solid #7dd3fc;box-shadow:0 0 24px rgba(56,189,248,.9)}
+.card h2{font-size:28px;margin:16px 0 14px;padding-right:90px}
+.tag{display:inline-block;margin:8px 8px 16px 0;padding:9px 14px;border-radius:999px;border:1px solid #facc15;color:#facc15;font-weight:900;font-size:12px}
+.empty{text-align:center;color:#cbd5e1;font-size:20px;grid-column:1/-1}
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.78);backdrop-filter:blur(5px);z-index:50}
+.modal.show{display:flex}
+.box{position:relative;width:100%;max-width:560px;max-height:92vh;overflow:auto;background:linear-gradient(145deg,#111827,#070b17);border:1px solid rgba(148,163,184,.28);border-radius:28px;padding:28px;box-shadow:0 30px 80px rgba(0,0,0,.65)}
+.box.large{max-width:760px}
+.close{position:absolute;right:14px;top:14px;width:42px;height:42px;border-radius:14px;background:#1f2937;box-shadow:none}
+input{width:100%;padding:16px;margin:12px 0;border-radius:16px;border:1px solid #334155;background:#020617;color:#fff;font-size:17px}
+.notice{padding:16px;border:1px solid #263044;background:#020617;border-radius:18px;margin:16px 0;color:#e5e7eb}
+#map{height:330px;border:1px solid #334155;border-radius:20px;margin:16px 0}
+.ok-text{color:#86efac;font-weight:900}
+.bad-text{color:#fca5a5;font-weight:900}
+
+#map{
+  position:relative;
+  z-index:1;
+  background:#0f172a;
+}
+
+.leaflet-container{
+  background:#0f172a;
+  color:#111827;
+}
+
+.info-text p{
+  margin:0 0 18px;
+  color:#e5e7eb;
+  line-height:1.55;
+}
+
+.info-text strong{
+  color:#fff;
+}
+
+.modal-actions{
+  display:grid;
+  gap:10px;
+  margin-top:14px;
+}
+
+.modal-actions button{
+  width:100%;
+}
+
+.modal-icon{
+  width:66px;
+  height:66px;
+  border-radius:22px;
+  display:grid;
+  place-items:center;
+  margin:0 auto 16px;
+  font-size:32px;
+  font-weight:900;
+  background:rgba(238,77,45,.16);
+  border:1px solid rgba(238,77,45,.38);
+  color:#ffb199;
+}
+
+.id-help{
+  color:#94a3b8;
+  font-size:14px;
+  margin-top:-4px;
+  margin-bottom:10px;
+}
+
+.input-alert{
+  border-color:#ee4d2d!important;
+  box-shadow:0 0 0 3px rgba(238,77,45,.22)!important;
+}
+
+@media(max-width:520px){
+  header{padding:26px 14px 8px}
+  .grid{padding:22px 14px 42px;grid-template-columns:1fr}
+  .box{border-radius:24px;padding:24px}
+  .close{width:48px;height:48px;font-size:24px}
+  input{min-height:56px;font-size:18px}
+  button{min-height:54px;font-size:16px}
+  #map{height:300px}
+}
+
+</style>
+</head>
+
+<body>
+<header>
+  <h1>Rotas Disponíveis</h1>
+  <p>Escolha uma rota disponível e confirme com seu ID.</p>
+  <div class="top">
+    <button class="btn-green" onclick="abrirGalpao()">Aguardar rota no galpão</button>
+    <button class="btn-dark" onclick="abrir('modalInfo')">Como funciona?</button>
+  </div>
+</header>
+
+<main id="rotas" class="grid"></main>
+
+<div id="modalInfo" class="modal">
+  <div class="box">
+    <button class="close" onclick="fechar('modalInfo')">×</button>
+
+    <div class="modal-icon">?</div>
+
+    <h2>Como funciona?</h2>
+
+    <div class="info-text">
+      <p>
+        O botão <strong>“Aguardar rota no galpão”</strong> serve para o motorista
+        confirmar que está próximo ao galpão e disponível para uma possível rota.
+      </p>
+
+      <p>
+        Ao clicar, o sistema irá pedir sua localização e verificar se você está
+        dentro do raio permitido. Se estiver dentro do raio, o botão de confirmação
+        será liberado.
+      </p>
+
+      <p>
+        Mesmo registrando sua presença pelo sistema, também é importante avisar os
+        analistas que você está próximo ao galpão aguardando uma rota, para que
+        todos tenham ciência da sua disponibilidade.
+      </p>
+    </div>
+
+    <div class="modal-actions">
+      <button onclick="fechar('modalInfo')">Entendi</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalRota" class="modal">
+  <div class="box">
+    <button class="close" onclick="fechar('modalRota')">×</button>
+    <h2>Confirmar rota</h2>
+    <div class="notice">
+      <strong id="prevRota"></strong><br>
+      <span id="prevRegiao"></span>
+    </div>
+    <input id="driverId" class="id-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="12" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Digite seu ID">
+    <div class="id-help">Digite o ID manualmente. Colar/copiar não é permitido.</div>
+    <button onclick="confirmarRota()">Confirmar e pegar rota</button>
+    <button class="btn-dark" onclick="fechar('modalRota')">Cancelar</button>
+  </div>
+</div>
+
+<div id="modalGalpao" class="modal">
+  <div class="box large">
+    <button class="close" onclick="fechar('modalGalpao')">×</button>
+    <h2>Aguardar rota no galpão</h2>
+    <p>Digite seu ID e permita a localização.</p>
+    <input id="waitingDriverId" class="id-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="12" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Digite seu ID">
+    <div class="id-help">Digite o ID manualmente. Colar/copiar não é permitido.</div>
+    <div id="map"></div>
+    <div id="infoGalpao" class="notice">Carregando configuração...</div>
+    <button onclick="analisarLocalizacao()">Analisar localização</button>
+    <button id="btnRegistrar" class="btn-green" style="display:none" onclick="registrarPresenca()">Confirmar presença no galpão</button>
+    <button class="btn-dark" onclick="fechar('modalGalpao')">Cancelar</button>
+  </div>
+</div>
+
+<div id="modalMsg" class="modal">
+  <div class="box">
+    <button class="close" onclick="fechar('modalMsg')">×</button>
+    <div class="modal-icon" id="msgIcon">!</div>
+    <h2 id="msgTitulo"></h2>
+    <p id="msgTexto"></p>
+    <div class="modal-actions">
+      <button onclick="fechar('modalMsg')">Entendi</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://yewfqmgmphswqvpuhfin.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlld2ZxbWdtcGhzd3F2cHVoZmluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNjAzNDcsImV4cCI6MjA5MzYzNjM0N30.DJcUn4nU-yDtCZatK8e8XhDwi2e4qa3oEdyPOdYi4xs";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let rotaAtual = null;
+let hubConfig = null;
+let ultimaLocalizacao = null;
+let mapa = null;
+let camadaHub = null;
+let camadaRaio = null;
+let camadaMotorista = null;
+let camadaPrecisao = null;
+
+function abrir(id){document.getElementById(id).classList.add("show")}
+function fechar(id){document.getElementById(id).classList.remove("show")}
+function msg(t,t2,icon="!"){
+  if(document.getElementById("msgIcon")) msgIcon.innerText=icon;
+  msgTitulo.innerText=t;
+  msgTexto.innerText=t2;
+  abrir("modalMsg");
+}
+
+function bloquearColagemId(input){
+  if(!input)return;
+
+  const aviso=()=>{
+    input.classList.add("input-alert");
+    msg("Ação não permitida","O ID precisa ser digitado manualmente.","!");
+    setTimeout(()=>input.classList.remove("input-alert"),900);
+  };
+
+  ["paste","drop","contextmenu"].forEach(evt=>{
+    input.addEventListener(evt,e=>{
+      e.preventDefault();
+      aviso();
+    });
+  });
+
+  input.addEventListener("beforeinput",e=>{
+    if(e.inputType && String(e.inputType).toLowerCase().includes("paste")){
+      e.preventDefault();
+      aviso();
+    }
+  });
+
+  input.addEventListener("input",()=>{
+    input.value=input.value.replace(/\D/g,"").slice(0,12);
+  });
+}
+
+function ativarBloqueioIds(){
+  bloquearColagemId(document.getElementById("driverId"));
+  bloquearColagemId(document.getElementById("waitingDriverId"));
+}
+
+function minhasRotas(){return JSON.parse(localStorage.getItem("minhasRotas")||"[]")}
+function salvarMinhaRota(id){
+  const arr=minhasRotas();
+  if(!arr.includes(String(id))) arr.push(String(id));
+  localStorage.setItem("minhasRotas",JSON.stringify(arr));
+}
+
+function veiculos(v){return Array.isArray(v)?v:String(v||"").replace(/[{}"]/g,"").split(",").map(x=>x.trim()).filter(Boolean)}
+
+async function carregarRotas(){
+  const {data,error}=await sb.rpc("get_public_routes");
+  if(error){rotas.innerHTML='<div class="empty">Erro ao carregar rotas.</div>';return}
+  rotas.innerHTML="";
+  if(!data.length){rotas.innerHTML='<div class="empty">Nenhuma rota disponível.</div>';return}
+  const minhas=minhasRotas();
+  data.forEach(r=>{
+    const disponivel=r.status==="disponivel";
+    const minha=minhas.includes(String(r.id)) || r.claimed_by_driver_id===localStorage.getItem("ultimoDriverId");
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`
+      <div class="status ${disponivel?'ok':minha?'mine':'done'}">${disponivel?'DISPONÍVEL':minha?'ESSA ROTA É SUA':'ROTA REPASSADA'}</div>
+      <h2>ROTA: ${r.route_name}</h2>
+      <p><strong>Região:</strong> ${r.region}</p>
+      <div>${veiculos(r.allowed_vehicles).map(v=>`<span class="tag">● ${v}</span>`).join("")}</div>
+      <div>${veiculos(r.allowed_shifts).map(t=>`<span class="tag">TURNO ${t}</span>`).join("")}</div>
+      ${disponivel?`<button onclick='abrirConfirmacao(${JSON.stringify(r)})'>Pegar rota</button>`:minha?`<button disabled>Essa rota é sua</button>`:`<button disabled>Indisponível</button>`}
+    `;
+    rotas.appendChild(card);
+  });
+}
+
+function abrirConfirmacao(r){
+  rotaAtual=r;
+  prevRota.innerText="Rota: "+r.route_name;
+  prevRegiao.innerText="Região: "+r.region;
+  driverId.value="";
+  abrir("modalRota");
+}
+
+async function confirmarRota(){
+  const id=driverId.value.replace(/\D/g,'').trim();
+  if(!id)return msg("ID obrigatório","Informe seu ID.");
+  const {data,error}=await sb.rpc("claim_route_atomic",{p_driver_id:id,p_route_id:rotaAtual.id});
+  if(error)return msg("Erro","Não foi possível pegar a rota.");
+  if(data.success){
+    localStorage.setItem("ultimoDriverId",id);
+    salvarMinhaRota(rotaAtual.id);
+    fechar("modalRota");
+    msg("Rota confirmada","Você pegou a rota com sucesso. A rota ficará marcada como sua nesta tela.","✓");
+    carregarRotas();
+    return;
+  }
+  const mensagens={
+    route_already_taken:"Infelizmente alguém preencheu primeiro. Tente outra rota.",
+    driver_already_has_route:"Você já possui uma rota.",
+    driver_not_found:"Motorista não encontrado ou inativo.",
+    vehicle_not_allowed:"Seu veículo não é permitido para essa rota.",
+    driver_punished:"Não foi possível pegar a rota.",
+    shift_not_allowed:"Não foi possível pegar a rota."
+  };
+  msg("Não foi possível pegar a rota",mensagens[data.reason]||"Operação não autorizada.");
+}
+
+
+function inicializarMapaGalpao(){
+  if(!hubConfig || typeof L === "undefined") return;
+
+  const lat = Number(hubConfig.latitude);
+  const lon = Number(hubConfig.longitude);
+  const raio = Number(hubConfig.radius_meters || 300);
+
+  if(!lat || !lon){
+    infoGalpao.innerHTML='<span class="bad-text">Coordenadas do galpão inválidas.</span>';
+    return;
+  }
+
+  if(!mapa){
+    mapa = L.map("map", {
+      zoomControl:true,
+      attributionControl:false
+    });
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom:19
+    }).addTo(mapa);
+  }
+
+  setTimeout(()=>mapa.invalidateSize(),150);
+
+  const hub = [lat, lon];
+
+  if(camadaHub) mapa.removeLayer(camadaHub);
+  if(camadaRaio) mapa.removeLayer(camadaRaio);
+  if(camadaMotorista) mapa.removeLayer(camadaMotorista);
+  if(camadaPrecisao) mapa.removeLayer(camadaPrecisao);
+
+  camadaHub = L.marker(hub).addTo(mapa).bindPopup(hubConfig.hub_name || "Galpão");
+  camadaRaio = L.circle(hub, {
+    radius:raio,
+    color:"#22c55e",
+    fillColor:"#22c55e",
+    fillOpacity:.12,
+    weight:2
+  }).addTo(mapa);
+
+  mapa.setView(hub, 16);
+}
+
+function atualizarMapaMotorista(lat, lon, accuracy){
+  if(!mapa || !hubConfig || typeof L === "undefined") return;
+
+  if(camadaMotorista) mapa.removeLayer(camadaMotorista);
+  if(camadaPrecisao) mapa.removeLayer(camadaPrecisao);
+
+  camadaMotorista = L.marker([lat, lon]).addTo(mapa).bindPopup("Você");
+  camadaPrecisao = L.circle([lat, lon], {
+    radius:accuracy || 0,
+    color:"#38bdf8",
+    fillColor:"#38bdf8",
+    fillOpacity:.10,
+    weight:2
+  }).addTo(mapa);
+
+  const grupo = L.featureGroup([camadaHub, camadaRaio, camadaMotorista, camadaPrecisao].filter(Boolean));
+  mapa.fitBounds(grupo.getBounds().pad(0.25));
+}
+
+async function abrirGalpao(){
+  waitingDriverId.value="";
+  btnRegistrar.style.display="none";
+  abrir("modalGalpao");
+  const {data}=await sb.rpc("get_hub_config_public");
+  hubConfig=Array.isArray(data)?data[0]:data;
+  if(!hubConfig){infoGalpao.innerHTML='<span class="bad-text">Galpão não configurado.</span>';return}
+  infoGalpao.innerHTML=`<strong>${hubConfig.hub_name}</strong><br>Raio permitido: <strong>${hubConfig.radius_meters}m</strong>`;
+  setTimeout(inicializarMapaGalpao, 200);
+}
+
+function distanciaMetros(lat1,lon1,lat2,lon2){
+  const R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*(2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
+}
+
+function analisarLocalizacao(){
+  const id=waitingDriverId.value.replace(/\D/g,'').trim();
+  if(!id)return msg("ID obrigatório","Digite seu ID.");
+  if(!hubConfig)return msg("Galpão não configurado","Configure no painel admin.");
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const lat=pos.coords.latitude, lon=pos.coords.longitude, acc=pos.coords.accuracy||0;
+    const dist=distanciaMetros(Number(hubConfig.latitude),Number(hubConfig.longitude),lat,lon);
+    ultimaLocalizacao={driver_id:id,latitude:lat,longitude:lon,accuracy:acc};
+    atualizarMapaMotorista(lat, lon, acc);
+    infoGalpao.innerHTML=`
+      Distância: <strong>${Math.round(dist)}m</strong><br>
+      Raio permitido: <strong>${hubConfig.radius_meters}m</strong><br>
+      ${dist<=hubConfig.radius_meters?'<span class="ok-text">Dentro do raio.</span>':'<span class="bad-text">Fora do raio.</span>'}
+    `;
+    btnRegistrar.style.display=dist<=hubConfig.radius_meters?"block":"none";
+  },()=>msg("Localização não permitida","Permita o acesso à localização."));
+}
+
+async function registrarPresenca(){
+  if(!ultimaLocalizacao)return;
+  const {data,error}=await sb.rpc("register_waiting_hub",{
+    p_driver_id:ultimaLocalizacao.driver_id,
+    p_latitude:ultimaLocalizacao.latitude,
+    p_longitude:ultimaLocalizacao.longitude,
+    p_accuracy:ultimaLocalizacao.accuracy
+  });
+  if(error||!data.success)return msg("Não foi possível registrar",data?.error||"Erro ao registrar presença.");
+  fechar("modalGalpao");
+  msg("Presença registrada",data.message || "Você está aguardando rota no galpão.","✓");
+}
+
+sb.channel("routes-realtime")
+.on("postgres_changes",{event:"*",schema:"public",table:"routes"},()=>carregarRotas())
+.subscribe();
+
+ativarBloqueioIds();
+carregarRotas();
+</script>
+</body>
+</html>
